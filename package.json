@@ -1,0 +1,20 @@
+{
+  "name": "truth",
+  "version": "1.0.0",
+  "description": "[PRESENTATION] Searching for Truth in the Age of Maybe",
+  "homepage": "https://github.com/ThirstyHead/truth#readme",
+  "bugs": {
+    "url": "https://github.com/ThirstyHead/truth/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThirstyHead/truth.git"
+  },
+  "license": "ISC",
+  "author": "Scott Davis <scott@thirstyhead.com>",
+  "type": "commonjs",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
