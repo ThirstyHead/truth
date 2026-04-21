@@ -1,66 +1,629 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Scott Davis <scott@thirstyhead.com>">
-    <meta name="description" content="">
-    <meta name="keywords"
-          content="">
-    <link rel="shortcut icon" href="favicon.ico" />
-
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Searching for Truth in the Age of Maybe</title>
+    <!-- 
+      BASELINE 0.1 (Updated - Nav Relocation)
+      GIDS 2026 Presentation: "Searching for Truth in the Age of Maybe"
+      Framework: Vanilla HTML/CSS/JS
+      Architecture: SMACSS
+      Compliance: WCAG 2.1 AA
+    -->
     <style>
-      a{
-        color: white;
-        text-decoration: none;
-      }
+        /* SMACSS - BASE STYLES 
+           Core defaults, typography, and theme variables.
+        */
+        :root {
+            --bg-main: #0f172a;      /* Slate 900 */
+            --bg-card: #1e293b;      /* Slate 800 */
+            --bg-notes: #020617;    /* Slate 950 */
+            --text-main: #f8fafc;    /* Slate 50 */
+            --text-muted: #94a3b8;   /* Slate 400 */
+            --accent: #3b82f6;       /* Blue 500 */
+            --accent-focus: #60a5fa; /* Blue 400 */
+            --border-color: #334155; /* Slate 700 */
+            --transition-speed: 0.3s;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+        }
 
-      a:hover{
-        color: red;
-        text-decoration: underline;
-      }
+        * {
+            box-sizing: border-box;
+        }
 
-      body{
-        background-color: black;
-        color: white;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 1.2em;
-        padding: 1em;
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            margin: 0;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden; 
+        }
 
-      }
+        h1, h2, p, ul {
+            margin: 0;
+        }
 
-      h1{
-        font-family: "Times New Roman", Times, serif;
-        font-size: 2em;
-      }
+        button {
+            cursor: pointer;
+            font-family: inherit;
+            border: none;
+            background: none;
+            color: inherit;
+        }
 
-      h2{
-        font-family: "Times New Roman", Times, serif;
-      }
+        /* Focus indicators for WCAG 2.1 AA */
+        :focus-visible {
+            outline: 2px solid var(--accent-focus);
+            outline-offset: 2px;
+        }
 
-      img{
-        float: left;
-        width: 33%;
-        clip-path: circle();
-        shape-outside: circle();  
-      }
-      
-    </style>    
-  </head>
+        /* SMACSS - LAYOUT STYLES 
+           Major structural landmarks and rigid containers.
+        */
+        .l-app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
 
-  <body>
-    <article>
-      <h1>Title</h1>
-    <img src="" alt="">
-    <p>
-    </p>
+        .l-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+            flex-shrink: 0;
+        }
 
-    <h2>View Slideshow</h2>
-    <ul>
-      <li><a href="slides/en-us/index-src.html">English (en-us)</a></li>
-    </ul>
-  </article>
-  </body>
+        .l-main-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden; 
+        }
+
+        .l-sidebar {
+            width: 18rem;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            transition: transform var(--transition-speed) ease;
+            flex-shrink: 0;
+        }
+
+        .l-content {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            outline: none;
+        }
+
+        .l-notes {
+            width: 22rem;
+            background-color: var(--bg-notes);
+            border-left: 1px solid var(--border-color);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        /* SMACSS - MODULE STYLES 
+           Reusable components.
+        */
+        
+        /* Nav Buttons (Sidebar) */
+        .m-nav-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.85rem 1rem;
+            font-size: 0.875rem;
+            border-left: 4px solid transparent;
+            color: var(--text-muted);
+            transition: background var(--transition-speed);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .m-nav-btn:hover {
+            background-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .m-nav-btn-num {
+            opacity: 0.5;
+            width: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .m-nav-btn-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Skip Link */
+        .m-skip-link {
+            position: absolute;
+            top: -100px;
+            left: 1rem;
+            background: var(--accent);
+            color: white;
+            padding: 1rem 2rem;
+            z-index: 100;
+            border-radius: 0 0 0.5rem 0.5rem;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .m-skip-link:focus {
+            top: 0;
+        }
+
+        /* Slides */
+        .m-slide {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            padding: 3rem;
+            overflow-y: auto;
+            animation: slideIn 0.4s cubic-bezier(0, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card Content */
+        .m-slide-card {
+            max-width: 60rem;
+            width: 100%;
+            background-color: var(--bg-card);
+            padding: 4rem;
+            border-radius: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            flex-shrink: 0;
+        }
+
+        .m-slide-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 2rem;
+            line-height: 1.1;
+        }
+
+        .m-slide-subtitle {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-bottom: 2.5rem;
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        .m-slide-list {
+            list-style: none;
+            padding: 0;
+            font-size: 1.5rem;
+            color: #cbd5e1; /* Slate 300 */
+        }
+
+        .m-slide-list-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .m-slide-bullet {
+            width: 0.6rem;
+            height: 0.6rem;
+            background-color: var(--accent);
+            border-radius: 50%;
+            margin-top: 0.6rem;
+            flex-shrink: 0;
+        }
+
+        /* Hero Slide (Text Overlaid on Image) */
+        .m-slide--hero {
+            padding: 0;
+            background-size: contain;
+            background-position: left center;
+            background-repeat: no-repeat;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .m-slide-overlay {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 45%;
+            background-color: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(12px);
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Full Image Slide */
+        .m-slide--full {
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        .m-full-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            color: white; 
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Header Navigation Controls */
+        .m-header-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background-color: rgba(15, 23, 42, 0.4);
+            padding: 0.25rem;
+            border-radius: 9999px;
+            border: 1px solid var(--border-color);
+        }
+
+        .m-btn-nav {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: var(--text-muted);
+        }
+
+        .m-btn-nav:hover:not(:disabled) {
+            background-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .m-btn-nav:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
+
+        .m-btn-nav--primary:not(:disabled) {
+            color: var(--accent);
+        }
+
+        .m-btn-nav--primary:hover:not(:disabled) {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-focus);
+        }
+
+        /* Icons */
+        .m-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2.5;
+        }
+
+        /* SMACSS - STATE STYLES */
+        .is-hidden { display: none !important; }
+        .is-active { display: flex !important; }
+        .is-selected {
+            background-color: rgba(59, 130, 246, 0.15) !important;
+            border-left-color: var(--accent) !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        /* Accessibility Utilities */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            .l-sidebar, .l-notes { display: none !important; }
+            .m-slide { display: flex !important; page-break-after: always; height: auto; }
+        }
+
+        @media (max-width: 1024px) {
+            .m-slide-overlay { width: 55%; padding: 2rem; }
+            .m-slide-title { font-size: 2.25rem; }
+        }
+
+        @media (max-width: 768px) {
+            .l-header { flex-direction: column; gap: 0.75rem; padding: 1rem; }
+            .l-sidebar, .l-notes { width: 100%; position: absolute; height: 100%; z-index: 100; }
+            .m-slide-overlay { position: relative; width: 100%; height: auto; border-left: none; border-top: 1px solid var(--border-color); }
+            .m-slide--hero { background-position: center top; flex-direction: column; justify-content: flex-start; }
+            .m-slide-card { padding: 2rem; }
+        }
+    </style>
+</head>
+<body class="l-app-container">
+
+    <a href="#main-content" class="m-skip-link">Skip to slide content</a>
+
+    <!-- Global Header -->
+    <header class="l-header" role="banner">
+        <!-- Title/Logo Area -->
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+            <svg class="m-icon" aria-hidden="true" style="color: var(--accent-focus); width: 1.5rem; height: 1.5rem;" viewBox="0 0 24 24">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h1 style="font-size: 1rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;">Searching for Truth in the Age of Maybe</h1>
+        </div>
+        
+        <!-- Navigation Controls (Moved to Header) -->
+        <div class="m-header-nav no-print" role="group" aria-label="Slide navigation">
+            <button id="prev-btn" class="m-btn-nav" aria-label="Previous Slide">
+                <svg class="m-icon" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="next-btn" class="m-btn-nav m-btn-nav--primary" aria-label="Next Slide">
+                <svg class="m-icon" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+        </div>
+        
+        <!-- Screen reader live region -->
+        <div id="slide-announcer" class="sr-only" aria-live="polite">Presenter mode active</div>
+        
+        <!-- Slide Count Area -->
+        <div style="font-size: 0.75rem; font-family: monospace; color: var(--text-muted); flex: 1; text-align: right;" aria-hidden="true">
+            Slide <span id="current-slide-num">1</span> of <span id="total-slide-num">44</span>
+        </div>
+    </header>
+
+    <div class="l-main-wrapper">
+        <!-- Sidebar Navigation -->
+        <nav id="slide-nav" class="l-sidebar no-print is-hidden" aria-label="Slide Deck Navigation">
+            <ul id="slide-list" style="list-style: none; padding: 0;">
+                <!-- Populated by JavaScript -->
+            </ul>
+        </nav>
+
+        <!-- Main Slide Viewport -->
+        <main id="main-content" class="l-content" tabindex="-1">
+            <div id="slides-wrapper" style="height: 100%;">
+                <!-- Individual Slides Injected Here -->
+            </div>
+        </main>
+
+        <!-- Speaker Notes -->
+        <aside id="speaker-notes" class="l-notes no-print is-hidden" aria-label="Presenter Notes">
+            <h2 style="font-size: 0.75rem; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" /></svg>
+                Speaker Notes
+            </h2>
+            <div id="notes-content" style="color: #cbd5e1; font-size: 0.875rem; flex: 1; overflow-y: auto;">
+                <!-- Updated dynamically -->
+            </div>
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #1e293b; font-size: 0.65rem; color: #475569; font-style: italic;">
+                Shortcuts: L (List), N (Notes), P (Toggle Both)
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const slideData = [
+            {
+                title: "Searching for Truth in the Age of Maybe",
+                subtitle: "Living with Code, Confidence, and Ambiguity",
+                content: "Scott Davis<br>scott@thirstyhead.com",
+                image: "img/tunnel.jpg",
+                imageAlt: "",
+                notes: "Welcome to GIDS. This talk is about "
+            },
+            {
+                title: "Driving Instructions",
+                subtitle: "Keyboard Shortcuts for Presenting",
+                points: [
+                    "<strong>[ L ]</strong> Toggle Slide List (Left sidebar)",
+                    "<strong>[ N ]</strong> Toggle Speaker Notes (Right sidebar)",
+                    "<strong>[ P ]</strong> Toggle Presenter Mode (Hides/Shows both)",
+                    "<strong>[ Arrows / Space ]</strong> Move through slides"
+                ],
+                notes: "The deck itself is the first demo of accessibility. Use these keys to manage the UI during your talk."
+            },
+            {
+                title: "Searching for Truth in the Age of Maybe",
+                subtitle: "Living with Code, Confidence, and Ambiguity",
+                content: "Scott Davis<br>scott@thirstyhead.com",
+                image: "img/tunnel.jpg",
+                imageAlt: "",
+                notes: "Welcome to GIDS. This talk is about "
+            },
+
+        ];
+
+        let currentIndex = 0;
+
+        const slidesWrapper = document.getElementById('slides-wrapper');
+        const slideList = document.getElementById('slide-list');
+        const notesContent = document.getElementById('notes-content');
+        const announcer = document.getElementById('slide-announcer');
+        const currentNumDisplay = document.getElementById('current-slide-num');
+        const totalNumDisplay = document.getElementById('total-slide-num');
+        const sideNav = document.getElementById('slide-nav');
+        const speakerNotes = document.getElementById('speaker-notes');
+
+        function init() {
+            totalNumDisplay.textContent = slideData.length;
+            
+            slideData.forEach((data, index) => {
+                const slide = document.createElement('article');
+                slide.id = `slide-${index}`;
+                
+                if (data.fullImage) {
+                    slide.className = `m-slide m-slide--full ${index === 0 ? 'is-active' : ''}`;
+                    slide.innerHTML = `
+                        <h2 class="sr-only" tabindex="-1">${data.title}</h2>
+                        <img src="${data.image}" alt="${data.imageAlt}" class="m-full-img">
+                    `;
+                } 
+                else if (data.image) {
+                    slide.className = `m-slide m-slide--hero ${index === 0 ? 'is-active' : ''}`;
+                    slide.style.backgroundImage = `url('${data.image}')`;
+                    slide.setAttribute('role', 'img');
+                    slide.setAttribute('aria-label', data.imageAlt || '');
+                    
+                    slide.innerHTML = `
+                        <div class="m-slide-overlay">
+                            <h2 id="header-${index}" class="m-slide-title" tabindex="-1">
+                                ${data.title}
+                            </h2>
+                            ${data.subtitle ? `<p class="m-slide-subtitle">${data.subtitle}</p>` : ''}
+                            ${data.content ? `<div style="font-size: 1.5rem; color: var(--text-muted);">${data.content}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    slide.className = `m-slide ${index === 0 ? 'is-active' : ''}`;
+                    slide.setAttribute('aria-labelledby', `header-${index}`);
+                    
+                    const pointsHtml = (data.points || []).map(p => `
+                        <li class="m-slide-list-item">
+                            <span aria-hidden="true" class="m-slide-bullet"></span>
+                            <span>${p}</span>
+                        </li>
+                    `).join('');
+                    
+                    slide.innerHTML = `
+                        <div class="m-slide-card">
+                            <h2 id="header-${index}" class="m-slide-title" tabindex="-1">
+                                ${data.title}
+                            </h2>
+                            ${data.subtitle ? `<p class="m-slide-subtitle">${data.subtitle}</p>` : ''}
+                            ${data.content ? `<div style="font-size: 1.25rem; margin-bottom: 1.5rem;">${data.content}</div>` : ''}
+                            ${data.points && data.points.length > 0 ? `
+                                <ul class="m-slide-list">
+                                    ${pointsHtml}
+                                </ul>` : ''}
+                        </div>
+                    `;
+                }
+                slidesWrapper.appendChild(slide);
+
+                const listItem = document.createElement('li');
+                listItem.role = "none";
+                listItem.innerHTML = `
+                    <button id="nav-btn-${index}" class="m-nav-btn ${index === 0 ? 'is-selected' : ''}" role="menuitem">
+                        <span class="m-nav-btn-num">${index + 1}.</span>
+                        <span class="m-nav-btn-text">${data.title}</span>
+                    </button>
+                `;
+                listItem.querySelector('button').onclick = () => goToSlide(index);
+                slideList.appendChild(listItem);
+            });
+
+            updateSlideUI();
+        }
+
+        function goToSlide(index) {
+            if (index < 0 || index >= slideData.length) return;
+            
+            document.querySelectorAll('.m-slide').forEach(s => s.classList.remove('is-active'));
+            document.querySelectorAll('.m-nav-btn').forEach(b => b.classList.remove('is-selected'));
+
+            currentIndex = index;
+            const activeSlide = document.getElementById(`slide-${currentIndex}`);
+            activeSlide.classList.add('is-active');
+            
+            const activeNav = document.getElementById(`nav-btn-${currentIndex}`);
+            activeNav.classList.add('is-selected');
+            activeNav.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            updateSlideUI();
+            
+            announcer.textContent = `Slide ${currentIndex + 1} of ${slideData.length}: ${slideData[currentIndex].title}`;
+            
+            const header = activeSlide.querySelector('h2');
+            if (header) header.focus();
+        }
+
+        function updateSlideUI() {
+            notesContent.innerHTML = slideData[currentIndex].notes || "No notes.";
+            currentNumDisplay.textContent = currentIndex + 1;
+            
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === slideData.length - 1;
+        }
+
+        function toggleSidebar() {
+            sideNav.classList.toggle('is-hidden');
+            announcer.textContent = sideNav.classList.contains('is-hidden') ? "Sidebar hidden" : "Sidebar visible";
+        }
+
+        function toggleNotes() {
+            speakerNotes.classList.toggle('is-hidden');
+            announcer.textContent = speakerNotes.classList.contains('is-hidden') ? "Notes hidden" : "Notes visible";
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                goToSlide(currentIndex + 1);
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                goToSlide(currentIndex - 1);
+            }
+
+            if (key === 'l') toggleSidebar();
+            if (key === 'n') toggleNotes();
+            if (key === 'p') {
+                const currentlyHidden = sideNav.classList.contains('is-hidden') && speakerNotes.classList.contains('is-hidden');
+                if (currentlyHidden) {
+                    sideNav.classList.remove('is-hidden');
+                    speakerNotes.classList.remove('is-hidden');
+                } else {
+                    sideNav.classList.add('is-hidden');
+                    speakerNotes.classList.add('is-hidden');
+                }
+                announcer.textContent = currentlyHidden ? "Standard mode" : "Presenter mode";
+            }
+        });
+
+        document.getElementById('prev-btn').onclick = () => goToSlide(currentIndex - 1);
+        document.getElementById('next-btn').onclick = () => goToSlide(currentIndex + 1);
+
+        window.onload = init;
+    </script>
+</body>
 </html>
